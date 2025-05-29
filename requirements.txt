@@ -9,6 +9,12 @@ APScheduler==3.6.3
 numpy>=1.24.0
 pandas>=2.0.0
 joblib>=1.1.0
+matplotlib>=3.5.0
+
+# Visualization and charting
+seaborn>=0.11.0
+plotly>=5.0.0
+ta>=0.10.1
 
 # Machine learning & AI
 scikit-learn>=1.0.0
@@ -20,3 +26,4 @@ python-dateutil>=2.8.2
 tzlocal>=4.2
 cachetools>=4.2.2
 tqdm>=4.64.0
+ccxt>=3.0.0
