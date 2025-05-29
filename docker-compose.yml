@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  forex-bot:
+    build: .
+    container_name: forex-trading-bot
+    restart: always
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GOLD_API_KEY=${GOLD_API_KEY}
+    volumes:
+      - ./user_data:/app/user_data
+      - ./logs:/app/logs
