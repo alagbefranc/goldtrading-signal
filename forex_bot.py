@@ -457,20 +457,19 @@ def send_telegram_signal(message):
     for attempt in range(max_retries):
         try:
             # Create a new bot instance each time to avoid connection issues
-            telegram_bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
+            telegram_bot = Bot(token=TELEGRAM_BOT_TOKEN)
             telegram_bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message, parse_mode='Markdown')
             logger.info(f"Sent signal to Telegram: {message}")
             return True
-        except telegram.error.NetworkError as e:
-            logger.warning(f"Network error sending Telegram message (attempt {attempt+1}/{max_retries}): {e}")
-            if attempt < max_retries - 1:
-                time.sleep(retry_delay)
-        except telegram.error.TelegramError as e:
-            logger.error(f"Telegram API error: {e}")
-            return False
         except Exception as e:
-            logger.error(f"Error sending Telegram message: {e}")
-            return False
+            error_msg = str(e).lower()
+            if 'network' in error_msg or 'connection' in error_msg:
+                logger.warning(f"Network error sending Telegram message (attempt {attempt+1}/{max_retries}): {e}")
+                if attempt < max_retries - 1:
+                    time.sleep(retry_delay)
+            else:
+                logger.error(f"Error sending Telegram message: {e}")
+                return False
     
     logger.error(f"Failed to send Telegram message after {max_retries} attempts")
     return False
