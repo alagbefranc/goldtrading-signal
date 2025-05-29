@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: forex-trading-bot
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python forex_bot.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.4
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GOLD_API_KEY
+        sync: false
