@@ -12,8 +12,8 @@ matplotlib.use('Agg')  # Use non-interactive backend for server
 import matplotlib.pyplot as plt
 import ccxt
 import telegram
-from telegram import ParseMode
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, ConversationHandler
+from telegram import Update, ParseMode
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, ConversationHandler, CallbackContext
 import requests
 import pytz
 import re
