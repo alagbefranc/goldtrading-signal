@@ -1,0 +1,52 @@
+# Environment variables and credentials
+.env
+*.env
+credentials.json
+config.json
+
+# User data and logs
+user_data/
+logs/
+*.log
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environment
+venv/
+ENV/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# ML model artifacts
+ml_models/data/
+*.pkl
+*.h5
+*.joblib

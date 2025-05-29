@@ -1,0 +1,73 @@
+{
+  "trades": [
+    {
+      "trade_id": "20250529125733_7595329670",
+      "chat_id": "7595329670",
+      "timestamp": "2025-05-29 12:57:33",
+      "signal": {
+        "symbol": "XAUUSD",
+        "type": "SELL",
+        "time": "2025-05-29 12:57:33",
+        "entry_price": 3323.1544981963043,
+        "stop_loss": 3323.7664680238654,
+        "take_profit": 3319.4826792309377,
+        "rr_ratio": 6.0,
+        "volume": 0.01,
+        "investment": 0,
+        "strategy": "ICT/SMC",
+        "order_blocks": 10,
+        "fair_value_gaps": 10
+      },
+      "status": "closed",
+      "result": "pending",
+      "profit_pips": null,
+      "notes": null
+    },
+    {
+      "trade_id": "20250529130341_7595329670",
+      "chat_id": "7595329670",
+      "timestamp": "2025-05-29 13:03:41",
+      "signal": {
+        "symbol": "XAUUSD",
+        "type": "BUY",
+        "time": "2025-05-29 13:03:41",
+        "entry_price": 3325.6441837288444,
+        "stop_loss": 3324.3292550036576,
+        "take_profit": 3333.533756079965,
+        "rr_ratio": 6.0,
+        "volume": 0.01,
+        "investment": 0,
+        "strategy": "ICT/SMC",
+        "order_blocks": 13,
+        "fair_value_gaps": 13
+      },
+      "status": "closed",
+      "result": "pending",
+      "profit_pips": null,
+      "notes": null
+    },
+    {
+      "trade_id": "20250529131823_7595329670",
+      "chat_id": "7595329670",
+      "timestamp": "2025-05-29 13:18:23",
+      "signal": {
+        "symbol": "XAUUSD",
+        "type": "SELL",
+        "time": "2025-05-29 13:18:23",
+        "entry_price": 3320.4985100151093,
+        "stop_loss": 3320.78718680062,
+        "take_profit": 3318.766449302045,
+        "rr_ratio": 6.0,
+        "volume": 0.01,
+        "investment": 0,
+        "strategy": "ICT/SMC",
+        "order_blocks": 13,
+        "fair_value_gaps": 10
+      },
+      "status": "closed",
+      "result": "pending",
+      "profit_pips": null,
+      "notes": null
+    }
+  ]
+}
