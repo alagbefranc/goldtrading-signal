@@ -1,6 +1,6 @@
 services:
-  - type: web
-    name: forex-trading-bot
+  - type: worker
+    name: forex-trading-bot-worker
     env: python
     buildCommand: pip install -r requirements.txt
     startCommand: python forex_bot.py
