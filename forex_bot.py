@@ -11,7 +11,7 @@ import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend for server
 import matplotlib.pyplot as plt
 import ccxt
-from telegram import ParseMode, Update
+from telegram import ParseMode, Update, Bot
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext, CallbackQueryHandler, ConversationHandler
 import requests
 import pytz
@@ -97,7 +97,7 @@ INVESTMENT_AMOUNT = 0
 SETTING_TIMEZONE = 1
 
 # Initialize Telegram bot
-bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
+bot = Bot(token=TELEGRAM_BOT_TOKEN)
 
 # Signal generation mode only - no MT5 initialization
 
