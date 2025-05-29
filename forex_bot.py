@@ -11,9 +11,8 @@ import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend for server
 import matplotlib.pyplot as plt
 import ccxt
-import telegram
-from telegram import Update, ParseMode
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, ConversationHandler, CallbackContext
+from telegram import ParseMode, Update
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext, CallbackQueryHandler, ConversationHandler
 import requests
 import pytz
 import re
@@ -960,13 +959,13 @@ Note: These calculations are estimates based on typical market conditions.
     except ValueError:
         update.message.reply_text("Please enter a valid number for the investment amount.")
 
-def gold_news_command(update: Update, context: CallbackContext) -> None:
+def gold_news_command(update, context):
     """Handle the /goldnews command to fetch latest gold market news"""
     chat_id = update.effective_chat.id
     
     try:
         # Show typing indicator
-        context.bot.send_chat_action(chat_id=chat_id, action=telegram.ChatAction.TYPING)
+        context.bot.send_chat_action(chat_id=chat_id, action='typing')
         
         # Fetch gold news using the market data service
         news_items = market_data_service.get_gold_news(limit=5)
