@@ -43,6 +43,44 @@ class UserMemory:
         
         logger.info("User memory system initialized")
     
+    def save_user_info(self, user_id: Union[str, int], user_info: Dict[str, Any]) -> bool:
+        """
+        Save user information to the preferences file
+        
+        Args:
+            user_id: The user's unique identifier
+            user_info: Dictionary containing user information to save
+            
+        Returns:
+            bool: True if save was successful, False otherwise
+        """
+        try:
+            # Convert user_id to string for consistency
+            user_id = str(user_id)
+            
+            # Load existing preferences
+            if not hasattr(self, 'user_preferences'):
+                self.user_preferences = self._load_json(self.preferences_file, {})
+                
+            # Update user's info
+            if 'users' not in self.user_preferences:
+                self.user_preferences['users'] = {}
+                
+            self.user_preferences['users'][user_id] = {
+                **self.user_preferences.get('users', {}).get(user_id, {}),
+                **user_info,
+                'last_updated': datetime.datetime.now().isoformat()
+            }
+            
+            # Save to file
+            self._save_json(self.preferences_file, self.user_preferences)
+            logger.info(f"Saved user info for user {user_id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error saving user info: {str(e)}", exc_info=True)
+            return False
+            
     def _load_json(self, file_path: str, default: Any) -> Any:
         """Load data from a JSON file with fallback to default"""
         if os.path.exists(file_path):

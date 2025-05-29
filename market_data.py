@@ -31,22 +31,38 @@ class MarketDataService:
         self.alpha_vantage_key = os.getenv('ALPHA_VANTAGE_API_KEY', 'M5REAHET6BN3DV95')
         self.gold_api_key = os.getenv('GOLD_API_KEY', '')
         
-        # Initialize cache
+        # Initialize cache with longer TTL
         self.cache = {}
-        self.cache_timeout = 300  # 5 minutes cache for prices
-        self.news_cache_timeout = 1800  # 30 minutes for news
+        self.cache_timeout = 600  # 10 minutes cache for prices (increased from 5)
+        self.news_cache_timeout = 3600  # 60 minutes for news (increased from 30)
         
-        # API rate limiting
+        # API rate limiting - be more conservative
         self.last_api_call = 0
-        self.min_call_interval = 1.0  # Minimum seconds between API calls
+        self.min_call_interval = 2.0  # Increased from 1.0 to 2.0 seconds between API calls
+        self.daily_calls = 0
+        self.last_daily_reset = datetime.now().date()
+        self.max_daily_calls = 20  # Stay under the 25/day free tier limit
 
     def _rate_limit(self) -> None:
-        """Enforce rate limiting between API calls"""
+        """Enforce rate limiting between API calls and daily limits"""
+        # Reset daily counter if it's a new day
+        current_date = datetime.now().date()
+        if current_date != self.last_daily_reset:
+            self.daily_calls = 0
+            self.last_daily_reset = current_date
+            
+        # Check daily limit
+        if self.daily_calls >= self.max_daily_calls:
+            raise Exception(f'Daily API call limit of {self.max_daily_calls} reached')
+            
+        # Enforce minimum time between calls
         now = time.time()
         time_since_last_call = now - self.last_api_call
         if time_since_last_call < self.min_call_interval:
             time.sleep(self.min_call_interval - time_since_last_call)
+            
         self.last_api_call = time.time()
+        self.daily_calls += 1
 
     def get_gold_price(self) -> Optional[float]:
         """
