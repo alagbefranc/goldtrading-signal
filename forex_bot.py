@@ -7,9 +7,12 @@ import datetime
 import logging
 import pandas as pd
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for server
 import matplotlib.pyplot as plt
 import ccxt
 import telegram
+from telegram import ParseMode
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, ConversationHandler
 import requests
 import pytz
@@ -20,6 +23,9 @@ from ta.momentum import RSIIndicator
 from ta.trend import MACD
 from ta.volatility import BollingerBands
 from pathlib import Path
+
+# Import market data service
+from market_data import market_data_service, format_gold_price
 
 # Import AI components and orchestrator
 try:
@@ -118,29 +124,19 @@ def fetch_ohlcv_data(symbol, timeframe, limit=100):
     try:
         # For real market data, we'll use external APIs
         if symbol == 'XAUUSD':  # Gold
-            # Try to get real gold price from a free API
             try:
-                # Use the MetalPriceAPI to get gold prices
-                api_url = "https://www.goldapi.io/api/XAU/USD"
-                headers = {
-                    "x-access-token": os.getenv('GOLD_API_KEY', 'goldapi-f20pyjskdkwlzq-io'),
-                    "Content-Type": "application/json"
-                }
-                
-                response = requests.get(api_url, headers=headers)
-                
-                if response.status_code == 200:
-                    gold_data = response.json()
-                    current_price = gold_data.get('price', 2340.0)  # Use current gold price or fallback to 2340
+                # Use the market data service to get gold price
+                current_price = market_data_service.get_gold_price()
+                if current_price is not None:
                     logger.info(f"Fetched real gold price: ${current_price}")
                 else:
-                    # Fallback to FallbackAPI 2340 (approximate current gold price as of May 2025)
+                    # Fallback to approximate current gold price
                     current_price = 2340.0
-                    logger.warning(f"Could not fetch real gold price (Status: {response.status_code}). Using fallback price: ${current_price}")
-            except Exception as api_error:
+                    logger.warning("Could not fetch real gold price. Using fallback price.")
+            except Exception as e:
                 # Fallback to approximate current gold price
                 current_price = 2340.0
-                logger.warning(f"Error fetching gold price: {api_error}. Using fallback price: ${current_price}")
+                logger.error(f"Error in market data service: {e}. Using fallback price.")
             
             # Generate more realistic data around the current price
             end_time = int(time.time() * 1000)  # current time in milliseconds
@@ -830,7 +826,8 @@ You can now chat naturally with me! Just ask me questions like:
 /signal [amount] - Generate a trading signal now
 /status - Check the bot status
 /invest [amount] - Calculate lot size for a specific investment amount
-/timezone [timezone] - Set your timezone"""
+/timezone [timezone] - Set your timezone
+/goldnews - Get the latest gold market news"""
     
     # Add trade tracking features if available
     if TRADE_TRACKING_AVAILABLE:
@@ -960,9 +957,55 @@ Potential Reward (1:6): ${potential_profit:.2f}
 Note: These calculations are estimates based on typical market conditions.
         """
         update.message.reply_text(response)
-        
     except ValueError:
-        update.message.reply_text("Invalid amount format. Please enter a number.")
+        update.message.reply_text("Please enter a valid number for the investment amount.")
+
+def gold_news_command(update: Update, context: CallbackContext) -> None:
+    """Handle the /goldnews command to fetch latest gold market news"""
+    chat_id = update.effective_chat.id
+    
+    try:
+        # Show typing indicator
+        context.bot.send_chat_action(chat_id=chat_id, action=telegram.ChatAction.TYPING)
+        
+        # Fetch gold news using the market data service
+        news_items = market_data_service.get_gold_news(limit=5)
+        
+        if not news_items:
+            update.message.reply_text("⚠️ Could not fetch gold market news at this time. Please try again later.")
+            return
+            
+        # Format the news items into a message
+        message = "📰 *Latest Gold Market News*\n\n"
+        
+        for i, item in enumerate(news_items, 1):
+            # Parse the published time
+            try:
+                pub_time = datetime.strptime(item['time_published'], '%Y%m%dT%H%M%S')
+                pub_time_str = pub_time.strftime('%b %d, %Y %H:%M')
+            except (ValueError, KeyError):
+                pub_time_str = "Recent"
+                
+            # Add the news item to the message
+            message += (
+                f"*{i}. {item.get('title', 'No title')}*\n"
+                f"_Source: {item.get('source', 'Unknown')} | {pub_time_str}_\n"
+                f"{item.get('summary', 'No summary available.')}\n"
+                f"[Read more]({item.get('url', '')})\n\n"
+            )
+        
+        # Send the message with markdown formatting
+        update.message.reply_text(
+            text=message,
+            parse_mode=ParseMode.MARKDOWN,
+            disable_web_page_preview=True
+        )
+        
+    except Exception as e:
+        logger.error(f"Error in gold_news_command: {e}", exc_info=True)
+        update.message.reply_text(
+            "❌ An error occurred while fetching gold news. Please try again later."
+        )
 
 def timezone_command(update, context):
     """Handle the /timezone command to set user timezone"""
@@ -1062,6 +1105,7 @@ def main():
         dispatcher.add_handler(CommandHandler("status", status_command))
         dispatcher.add_handler(CommandHandler("invest", invest_command, pass_args=True))
         dispatcher.add_handler(CommandHandler("timezone", timezone_command, pass_args=True))
+        dispatcher.add_handler(CommandHandler("goldnews", gold_news_command))
         
         # Add trade tracking commands if available
         if TRADE_TRACKING_AVAILABLE:
