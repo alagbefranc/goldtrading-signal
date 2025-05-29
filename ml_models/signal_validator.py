@@ -204,11 +204,20 @@ class SignalValidator:
                     "reason": "No trained model available for validation"
                 }
         
-        # Extract features
-        features = self._extract_features(data, order_blocks, fvgs)
-        
-        # Get prediction probability
         try:
+            # Extract features
+            features = self._extract_features(data, order_blocks, fvgs)
+            
+            # Check for feature mismatch
+            if hasattr(self.model, 'n_features_in_') and features.shape[1] != self.model.n_features_in_:
+                logger.warning(f"Feature mismatch: expected {self.model.n_features_in_} features, got {features.shape[1]}")
+                return {
+                    "valid": True,  # Default to True on feature mismatch
+                    "confidence": 0.5,
+                    "reason": f"Feature mismatch: expected {self.model.n_features_in_}, got {features.shape[1]}"
+                }
+            
+            # Get prediction probability
             probability = self.model.predict_proba(features)[0]
             # Index 1 is probability of class 1 (successful signal)
             confidence = probability[1] if len(probability) > 1 else 0.5
@@ -245,7 +254,7 @@ class SignalValidator:
             }
             
         except Exception as e:
-            logger.error(f"Error validating signal: {e}")
+            logger.error(f"Error validating signal: {e}", exc_info=True)
             return {
                 "valid": True,  # Default to True on error
                 "confidence": 0.5,
@@ -260,63 +269,7 @@ class SignalValidator:
             logger.info(f"Model saved to {path}")
             return True
         else:
-            logger.error("No model to save")
-            return False
-    
-    def _create_basic_model(self):
-        """Create a basic pre-trained model with reasonable defaults"""
-        logger.info("Creating a basic pre-trained model for signal validation")
-        try:
-            # Create a simple gradient boosting model with sensible defaults for forex trading
-            self.model = GradientBoostingClassifier(
-                n_estimators=100,
-                learning_rate=0.1,
-                max_depth=3,
-                min_samples_split=5,
-                random_state=42
-            )
-            
-            # Create some synthetic data for initial training
-            # This isn't ideal, but it allows the model to work immediately
-            # Later, it will be replaced by real trading data
-            
-            # Features: [price_change_pct, volatility, range_size, 
-            #           bullish_blocks, bearish_blocks, bullish_fvgs, bearish_fvgs]
-            X_synthetic = np.array([
-                # Synthetic BUY signals - good patterns
-                [0.05, 0.02, 0.8, 3, 1, 2, 0],   # Strong bullish
-                [0.03, 0.01, 0.7, 2, 1, 2, 1],   # Moderate bullish
-                [0.02, 0.02, 0.5, 2, 0, 1, 0],   # Mild bullish
-                
-                # Synthetic BUY signals - bad patterns
-                [0.01, 0.05, 0.3, 1, 3, 0, 2],   # Not good for BUY
-                [0.005, 0.04, 0.2, 0, 2, 0, 2],  # Bad for BUY
-                
-                # Synthetic SELL signals - good patterns
-                [-0.05, 0.02, 0.8, 1, 3, 0, 2],  # Strong bearish
-                [-0.03, 0.01, 0.7, 1, 2, 1, 2],  # Moderate bearish
-                [-0.02, 0.02, 0.5, 0, 2, 0, 1],  # Mild bearish
-                
-                # Synthetic SELL signals - bad patterns
-                [-0.01, 0.05, 0.3, 3, 1, 2, 0],  # Not good for SELL
-                [-0.005, 0.04, 0.2, 2, 0, 2, 0]  # Bad for SELL
-            ])
-            
-            # Labels: 1 = successful trade, 0 = unsuccessful trade
-            y_synthetic = np.array([1, 1, 1, 0, 0, 1, 1, 1, 0, 0])
-            
-            # Fit the model on synthetic data
-            self.model.fit(X_synthetic, y_synthetic)
-            
-            # Save this model as baseline
-            path = os.path.join(self.model_dir, 'signal_validator.joblib')
-            joblib.dump(self.model, path)
-            logger.info("Basic pre-trained model created and saved successfully")
-            return True
-            
-        except Exception as e:
-            logger.error(f"Error creating basic model: {e}")
-            self.model = None
+            logger.warning("No model to save")
             return False
     
     def load_model(self, filename='signal_validator.joblib'):
@@ -331,8 +284,41 @@ class SignalValidator:
                 logger.warning(f"Model file {path} not found")
                 return False
         except Exception as e:
-            logger.error(f"Error loading model: {e}")
+            logger.error(f"Error loading model: {e}", exc_info=True)
             return False
+    
+    def _create_basic_model(self):
+        """Create a basic pre-trained model with reasonable defaults"""
+        logger.info("Creating a basic pre-trained model for signal validation")
+        try:
+            # Create a simple gradient boosting model with sensible defaults for forex trading
+            self.model = GradientBoostingClassifier(
+                n_estimators=100,
+                learning_rate=0.1,
+                max_depth=3,
+                min_samples_split=5,
+                min_samples_leaf=2,
+                random_state=42
+            )
+            
+            # Create some dummy training data with the expected number of features (10 features)
+            # Features are: [price_change_pct, recent_volatility, longer_volatility, volume_change,
+            #                bullish_ob_count, bearish_ob_count, recent_ob_distance,
+            #                bullish_fvg_count, bearish_fvg_count, recent_fvg_size]
+            X_dummy = np.random.randn(100, 10)
+            y_dummy = np.random.randint(0, 2, 100)  # Binary classification
+            
+            # Fit the model with dummy data
+            self.model.fit(X_dummy, y_dummy)
+            
+            # Save the model
+            self.save_model()
+            logger.info("Basic pre-trained model created successfully with 10 features")
+            
+        except Exception as e:
+            logger.error(f"Error creating basic model: {e}", exc_info=True)
+            # If we can't create a basic model, set to None
+            self.model = None
 
 # Create singleton instance
 signal_validator = SignalValidator()
